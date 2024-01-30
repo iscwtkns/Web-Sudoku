@@ -2,7 +2,7 @@ h1 {
     text-align: center;
 }
 
-div {
+.cell {
     border: black solid 1px;
 }
 
