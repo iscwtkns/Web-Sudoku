@@ -1,0 +1,33 @@
+h1 {
+    text-align: center;
+}
+
+div {
+    border: black solid 1px;
+}
+
+.grid {
+    align-self: center;
+    border: black solid 3px;
+    width: 450px;
+    height: 450px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    margin: 0 auto;
+}
+
+.largeSquare {
+    border: black solid 3px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.sudoku {
+    border: none;
+}
+
+button {
+    margin : 20px;
+}
