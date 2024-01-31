@@ -1,10 +1,22 @@
 let completeSudokuGrid = null;
 let currentPossibilities = null;
+let currentGrid = null;
 let previousSteps = [];
 let difficulty = 5;
+let selectedCell = null;
 const cells = document.querySelectorAll(".cell");
 const cellSubWriting = document.querySelectorAll(".possibility");
 const startButton = document.querySelector(".start");
+
+cells.forEach(function(cell) {
+    cell.addEventListener("click", (e) => {
+        if (selectedCell !== null) {
+            selectedCell.style.backgroundColor = "white";
+        }
+        selectedCell = cell;
+        cell.style.backgroundColor = "aqua";
+    })
+})
 
 function drawGrid(grid) {
     cells.forEach(function(cell, index) {
@@ -37,11 +49,26 @@ function fillSmallNumbers(grid) {
     })
 }
 startButton.addEventListener("click", (e) => {
+    cells.forEach(function(cell) {
+        cell.style.backgroundColor = "white";
+    })
     completeSudokuGrid = generateCompleteGrid();
     currentPossibilities = findGridPossibilities(completeSudokuGrid);
-    drawGrid(completeSudokuGrid);
+    currentGrid = prepareGrid(completeSudokuGrid, difficulty);
+    drawGrid(currentGrid);
 })
 
+function prepareGrid(grid, difficulty) {
+    let newGrid = grid;
+    for (let squaresToLose = 46 + difficulty; squaresToLose >= 0; squaresToLose--) {
+        let random = getRandomInt(0, 80);
+        while (newGrid[Math.floor(random / 9)][random % 9] === "") {
+            random = getRandomInt(0, 80);
+        }
+        newGrid[Math.floor(random / 9)][random % 9] = "";
+    }
+    return newGrid;
+}
 function findRecursiveSolution(grid) {
     const nextCellsToFill = findCellsWithLeastPossibilities(grid);
 
