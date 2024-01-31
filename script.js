@@ -86,6 +86,7 @@ document.addEventListener("keydown", (e) => {
     if (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4' || e.key === '5' || e.key === '6' || e.key === '7' || e.key === '8' || e.key === '9') {
         if (selectedCell !== null && !isOriginal(originalSudokuGrid, selectedCell)) {
             selectedCell.textContent = e.key;
+            resetColors();
             let num = parseInt(selectedCell.textContent);
             cells.forEach(function (cell) {
                 if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
@@ -106,11 +107,15 @@ document.addEventListener("keydown", (e) => {
             selectedCell.style.backgroundColor = "white";
             selectedCell = null;
         }
+        resetColors();
     }
     if (e.key === "Backspace") {
         if (selectedCell !== null && !isOriginal(completeSudokuGrid, selectedCell)) {
             selectedCell.textContent = "";
+            resetColors();
+            selectedCell.style.backgroundColor = aqua;
         }
+
     }
 })
 
@@ -168,7 +173,7 @@ function prepareGrid(grid, difficulty) {
     }
     if (!checkUnique(newGrid)) {
         newGrid = grid;
-        for (let squaresToLose = 40 + difficulty; squaresToLose >= 0; squaresToLose--) {
+        for (let squaresToLose = 35 + difficulty; squaresToLose >= 0; squaresToLose--) {
             let random = getRandomInt(0, 80);
             while (newGrid[Math.floor(random / 9)][random % 9] === "") {
                 random = getRandomInt(0, 80);
