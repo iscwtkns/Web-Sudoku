@@ -1,23 +1,126 @@
 let completeSudokuGrid = null;
+let originalSudokuGrid = null;
 let currentPossibilities = null;
 let currentGrid = null;
-let previousSteps = [];
 let difficulty = 5;
 let selectedCell = null;
 const cells = document.querySelectorAll(".cell");
 const cellSubWriting = document.querySelectorAll(".possibility");
 const startButton = document.querySelector(".start");
 
+
+function checkUnique(grid) {
+    let solutions = [];
+
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+    solutions.push(findRecursiveSolution(grid));
+
+    for (let i = 0; i < solutions.length; i++) {
+        for (let j = 0; j < solutions.length; j++) {
+            if (areGridsEqual(solutions[i], solutions[j])) {
+
+            }
+            else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+function areGridsEqual(grid1, grid2) {
+    // Check if every element in both grids are equal
+    for (let i = 0; i < grid1.length; i++) {
+        for (let j = 0; j < grid1[i].length; j++) {
+            if (grid1[i][j] !== grid2[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+startButton.addEventListener("click", (e) => {
+    resetColors();
+    resetFontColors();
+    completeSudokuGrid = generateCompleteGrid();
+    console.log(completeSudokuGrid);
+    currentPossibilities = findGridPossibilities(completeSudokuGrid);
+    currentGrid = prepareGrid(completeSudokuGrid, difficulty);
+    originalSudokuGrid = currentGrid;
+    drawGrid(currentGrid);
+})
 cells.forEach(function(cell) {
     cell.addEventListener("click", (e) => {
-        if (selectedCell !== null) {
-            selectedCell.style.backgroundColor = "white";
-        }
+        resetColors();
         selectedCell = cell;
         cell.style.backgroundColor = "aqua";
+        if (selectedCell.textContent !== "") {
+            let num = parseInt(selectedCell.textContent);
+            cells.forEach(function (cell) {
+                if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
+                    cell.style.backgroundColor = "gray";
+                }
+            })
+
+        }
     })
 })
 
+function resetFontColors() {
+    cells.forEach(function(cell) {
+        cell.style.color = "black";
+    })
+}
+function resetColors() {
+    cells.forEach(function(cell) {
+        cell.style.backgroundColor = "white";
+    })
+}
+document.addEventListener("keydown", (e) => {
+    if (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4' || e.key === '5' || e.key === '6' || e.key === '7' || e.key === '8' || e.key === '9') {
+        if (selectedCell !== null && !isOriginal(originalSudokuGrid, selectedCell)) {
+            selectedCell.textContent = e.key;
+            let num = parseInt(selectedCell.textContent);
+            cells.forEach(function (cell) {
+                if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
+                    cell.style.backgroundColor = "gray";
+                }
+            })
+            selectedCell.style.display = "block";
+            if (isCorrect(findRecursiveSolution(completeSudokuGrid), selectedCell)) {
+                selectedCell.style.color = "blue";
+            }
+            else {
+                selectedCell.style.color = "red";
+            }
+        }
+    }
+    if (e.key === "Escape") {
+        if (selectedCell !== null) {
+            selectedCell.style.backgroundColor = "white";
+            selectedCell = null;
+        }
+    }
+    if (e.key === "Backspace") {
+        if (selectedCell !== null && !isOriginal(completeSudokuGrid, selectedCell)) {
+            selectedCell.textContent = "";
+        }
+    }
+})
+
+function isCorrect(completeGrid, cell) {
+    const pos = findPosition(cell);
+    console.log(pos[0], pos[1]);
+    console.log(completeGrid);
+    console.log(parseInt(cell.textContent.toString()));
+    return parseInt(completeGrid[pos[0]][pos[1]]) === parseInt(cell.textContent.toString());
+}
 function drawGrid(grid) {
     cells.forEach(function(cell, index) {
         cell.textContent = grid[Math.floor(index / 9)][index % 9];
@@ -48,24 +151,30 @@ function fillSmallNumbers(grid) {
         }
     })
 }
-startButton.addEventListener("click", (e) => {
-    cells.forEach(function(cell) {
-        cell.style.backgroundColor = "white";
-    })
-    completeSudokuGrid = generateCompleteGrid();
-    currentPossibilities = findGridPossibilities(completeSudokuGrid);
-    currentGrid = prepareGrid(completeSudokuGrid, difficulty);
-    drawGrid(currentGrid);
-})
 
+
+function isOriginal(originalGrid, cell) {
+    const pos = findPosition(cell);
+    return originalGrid[pos[0]][pos[1]] !== "";
+}
 function prepareGrid(grid, difficulty) {
     let newGrid = grid;
-    for (let squaresToLose = 46 + difficulty; squaresToLose >= 0; squaresToLose--) {
+    for (let squaresToLose = 40 + difficulty; squaresToLose >= 0; squaresToLose--) {
         let random = getRandomInt(0, 80);
         while (newGrid[Math.floor(random / 9)][random % 9] === "") {
             random = getRandomInt(0, 80);
         }
         newGrid[Math.floor(random / 9)][random % 9] = "";
+    }
+    if (!checkUnique(newGrid)) {
+        newGrid = grid;
+        for (let squaresToLose = 40 + difficulty; squaresToLose >= 0; squaresToLose--) {
+            let random = getRandomInt(0, 80);
+            while (newGrid[Math.floor(random / 9)][random % 9] === "") {
+                random = getRandomInt(0, 80);
+            }
+            newGrid[Math.floor(random / 9)][random % 9] = "";
+        }
     }
     return newGrid;
 }
@@ -158,11 +267,6 @@ function findPosition(cell) {
     }
     // Return null if the cell is not found
     return null;
-}
-function reverseSteps(grid) {
-    for (let i = 0; i < previousSteps.length; i++) {
-        grid[previousSteps[i][0]][previousSteps[i][1]] = "";
-    }
 }
 function generateCompleteGrid() {
 
