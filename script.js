@@ -2,13 +2,13 @@ let completeSudokuGrid = null;
 let originalSudokuGrid = null;
 let currentPossibilities = null;
 let currentGrid = null;
+let currentClues = null;
+let pencilMode = false;
 let difficulty = 5;
 let selectedCell = null;
 const cells = document.querySelectorAll(".cell");
 const cellSubWriting = document.querySelectorAll(".possibility");
 const startButton = document.querySelector(".start");
-
-
 function checkUnique(grid) {
     let solutions = [];
 
@@ -34,6 +34,36 @@ function checkUnique(grid) {
     }
     return true;
 }
+function findCurrentGrid() {
+    let grid = [];
+    for (let i = 0; i < 9; i++) {
+        grid.push([]);
+        for (let j = 0; j < 9; j++) {
+            grid.push("");
+        }
+    }
+    cells.forEach(function(cell) {
+        if (cell.style.display === "block" && cell.textContent !== "") {
+            const pos = findPosition(cell);
+            grid[pos[0]][pos[1]] = cell.textContent;
+        }
+    })
+    return grid;
+}
+function updateClues() {
+    cells.forEach(function(cell) {
+        if (cell.style.display === "grid") {
+            const pos = findPosition(cell);
+            for (let i = 0; i < 9; i++) {
+                if (currentClues[pos[0]][pos[1]][i] !== "") {
+                    if (!isValidPlacement(findCurrentGrid(), parseInt(currentClues[pos[0]][pos[1]][i]), pos[0], pos[1])) {
+                        currentClues[pos[0]][pos[1]][i] = "";
+                    }
+                }
+            }
+        }
+    })
+}
 function areGridsEqual(grid1, grid2) {
     // Check if every element in both grids are equal
     for (let i = 0; i < grid1.length; i++) {
@@ -45,11 +75,24 @@ function areGridsEqual(grid1, grid2) {
     }
     return true;
 }
+
+function initialiseClueGrid() {
+    currentClues = [];
+    for (let i = 0; i < 9; i++) {
+        currentClues.push([]);
+        for (let j = 0; j < 9; j++) {
+            currentClues[i].push([]);
+            for (let k = 0; k < 9; k++) {
+                currentClues[i][j].push("");
+            }
+        }
+    }
+}
 startButton.addEventListener("click", (e) => {
     resetColors();
     resetFontColors();
+    initialiseClueGrid();
     completeSudokuGrid = generateCompleteGrid();
-    console.log(completeSudokuGrid);
     currentPossibilities = findGridPossibilities(completeSudokuGrid);
     currentGrid = prepareGrid(completeSudokuGrid, difficulty);
     originalSudokuGrid = currentGrid;
@@ -64,7 +107,9 @@ cells.forEach(function(cell) {
             let num = parseInt(selectedCell.textContent);
             cells.forEach(function (cell) {
                 if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
-                    cell.style.backgroundColor = "gray";
+                    if (cell.style.display !== "grid") {
+                        cell.style.backgroundColor = "gray";
+                    }
                 }
             })
 
@@ -82,23 +127,62 @@ function resetColors() {
         cell.style.backgroundColor = "white";
     })
 }
+
+function clearClues() {
+    document.querySelectorAll(".possibility").forEach(function (clue) {
+        clue.remove();
+    })
+}
+function writeClues() {
+    clearClues();
+    cells.forEach(function(cell) {
+        if (cell.style.display === "grid") {
+
+            const pos = findPosition(cell);
+            for (let i = 0; i < 9; i++) {
+                let element = document.createElement("div");
+                element.textContent = currentClues[pos[0]][pos[1]][i];
+                element.className = "possibility";
+                cell.appendChild(element);
+
+            }
+        }
+    })
+}
 document.addEventListener("keydown", (e) => {
     if (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4' || e.key === '5' || e.key === '6' || e.key === '7' || e.key === '8' || e.key === '9') {
         if (selectedCell !== null && !isOriginal(originalSudokuGrid, selectedCell)) {
-            selectedCell.textContent = e.key;
-            resetColors();
-            let num = parseInt(selectedCell.textContent);
-            cells.forEach(function (cell) {
-                if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
-                    cell.style.backgroundColor = "gray";
+            if (!pencilMode) {
+                selectedCell.textContent = e.key;
+                resetColors();
+                let num = parseInt(selectedCell.textContent);
+                cells.forEach(function (cell) {
+                    if (parseInt(cell.textContent) === num && cell.style.backgroundColor !== "aqua") {
+                        if (cell.style.display !== "grid") {
+                            cell.style.backgroundColor = "gray";
+                        }
+                    }
+                })
+                selectedCell.style.display = "block";
+                if (isCorrect(findRecursiveSolution(completeSudokuGrid), selectedCell)) {
+                    selectedCell.style.color = "blue";
                 }
-            })
-            selectedCell.style.display = "block";
-            if (isCorrect(findRecursiveSolution(completeSudokuGrid), selectedCell)) {
-                selectedCell.style.color = "blue";
+                else {
+                    selectedCell.style.color = "red";
+                }
             }
-            else {
-                selectedCell.style.color = "red";
+            if (pencilMode) {
+                selectedCell.textContent = "";
+                resetColors();
+                selectedCell.style.display = "grid";
+                const pos = findPosition(selectedCell);
+                if (currentClues[pos[0]][pos[1]][parseInt(e.key)-1] !== "") {
+                    currentClues[pos[0]][pos[1]][parseInt(e.key)-1] = "";
+                }
+                else {
+                    currentClues[pos[0]][pos[1]][e.key-1] = e.key;
+                }
+                writeClues();
             }
         }
     }
@@ -111,19 +195,35 @@ document.addEventListener("keydown", (e) => {
     }
     if (e.key === "Backspace") {
         if (selectedCell !== null && !isOriginal(completeSudokuGrid, selectedCell)) {
+            if (selectedCell.style.display === "grid") {
+                const pos = findPosition(selectedCell);
+                for (let i = 0; i < 9; i++) {
+                    currentClues[pos[0]][pos[1]][i] = "";
+                }
+            }
             selectedCell.textContent = "";
             resetColors();
-            selectedCell.style.backgroundColor = aqua;
+            selectedCell.style.backgroundColor = "aqua";
+        }
+    }
+    if (e.key === "P" || e.key === "p") {
+
+        if (pencilMode) {
+            pencilMode = false;
+            document.getElementById("pencilModeIndicator").textContent = "Pencil Mode (P): OFF";
+        }
+        else if (!pencilMode) {
+            pencilMode = true;
+            document.getElementById("pencilModeIndicator").textContent = "Pencil Mode (P): ON";
         }
 
     }
+    selectedCell.style.backgroundColor = "aqua";
+
 })
 
 function isCorrect(completeGrid, cell) {
     const pos = findPosition(cell);
-    console.log(pos[0], pos[1]);
-    console.log(completeGrid);
-    console.log(parseInt(cell.textContent.toString()));
     return parseInt(completeGrid[pos[0]][pos[1]]) === parseInt(cell.textContent.toString());
 }
 function drawGrid(grid) {
@@ -228,7 +328,6 @@ function findRecursiveSolution(grid) {
 
     //Base Case
     if (nextCellsToFill.length === 0) {
-        console.log("finished generating");
         return grid;
     }
 
