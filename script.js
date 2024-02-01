@@ -7,7 +7,6 @@ let pencilMode = false;
 let difficulty = 5;
 let selectedCell = null;
 const cells = document.querySelectorAll(".cell");
-const cellSubWriting = document.querySelectorAll(".possibility");
 const startButton = document.querySelector(".start");
 function checkUnique(grid) {
     let solutions = [];
@@ -242,24 +241,7 @@ function drawGrid(grid) {
     })
 }
 
-function fillSmallNumbers(grid) {
-    cells.forEach(function (cell, index) {
-        if (cell.textContent.toString() !== "") {
-            cell.style.display = "block";
-        }
-        else {
-            cell.style.display = "grid";
-            for (let i = 1; i < 10; i++) {
-                if (isValidPlacement(grid, i, Math.floor(index / 9), index % 9)) {
-                    const element = document.createElement("div");
-                    element.textContent = i.toString();
-                    element.className = "possibility";
-                    cell.appendChild(element);
-                }
-            }
-        }
-    })
-}
+
 
 
 function isOriginal(originalGrid, cell) {
