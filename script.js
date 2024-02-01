@@ -39,7 +39,7 @@ function findCurrentGrid() {
     for (let i = 0; i < 9; i++) {
         grid.push([]);
         for (let j = 0; j < 9; j++) {
-            grid.push("");
+            grid[i].push("");
         }
     }
     cells.forEach(function(cell) {
@@ -56,6 +56,7 @@ function updateClues() {
             const pos = findPosition(cell);
             for (let i = 0; i < 9; i++) {
                 if (currentClues[pos[0]][pos[1]][i] !== "") {
+
                     if (!isValidPlacement(findCurrentGrid(), parseInt(currentClues[pos[0]][pos[1]][i]), pos[0], pos[1])) {
                         currentClues[pos[0]][pos[1]][i] = "";
                     }
@@ -170,6 +171,9 @@ document.addEventListener("keydown", (e) => {
                 else {
                     selectedCell.style.color = "red";
                 }
+                console.log(findCurrentGrid());
+                updateClues();
+                writeClues();
             }
             if (pencilMode) {
                 selectedCell.textContent = "";
